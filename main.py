@@ -59,10 +59,13 @@ memory = ConversationBufferMemory(
     return_messages=True
 )
 
-# Initialize the QA chain
+# Initialize the QA chain with more explicit configuration
 qa_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
-    retriever=db.as_retriever(),
+    retriever=db.as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": 4}  # Explicitly set number of documents to retrieve
+    ),
     memory=memory,
     return_source_documents=True,
     chain_type="stuff",
@@ -75,6 +78,8 @@ Use the following pieces of context to answer the question. If you don't know th
 Context: {context}
 
 Question: {question}
+
+Important: Always provide a complete, informative answer based on the context provided.
 
 Helpful Answer: """,
             input_variables=["context", "question"]
@@ -152,18 +157,31 @@ Helpful Answer: """,
                 )
                 
                 # Get response from RAG system
-                response = await asyncio.to_thread(
-                    lambda: qa_chain({
-                        "question": user_text,
-                        "chat_history": []  # Always start fresh
-                    })
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        lambda: qa_chain.invoke({
+                            "question": user_text,
+                            "chat_history": []
+                        })
+                    ),
+                    timeout=30
                 )
                 
-                if not response.get('answer'):
-                    answer = "I don't have enough information to answer that question."
-                else:
-                    answer = response['answer'].strip()
+                # Add detailed logging
+                logger.info(f"Raw chain result: {result}")
+                logger.info(f"Retrieved documents: {[doc.page_content[:200] for doc in result.get('source_documents', [])]}")
                 
+                if result and 'answer' in result:
+                    answer = result['answer'].strip()
+                    if answer == "assistant":  # Catch the specific error case
+                        logger.error("Model returned default 'assistant' response")
+                        answer = "I apologize, but I'm having trouble accessing the information. Please try again."
+                    else:
+                        logger.info(f"Successfully generated answer: {answer}")
+                else:
+                    logger.warning("No answer in response")
+                    answer = "I apologize, but I'm having trouble generating a response. Please try again."
+                    
                 logger.info(f"Question: {user_text}")
                 logger.info(f"Generated answer: {answer}")
                 
@@ -199,9 +217,39 @@ Helpful Answer: """,
 
 @app.on_event("startup")
 async def startup_event():
-    # Verify the database exists and is populated
+    # Enhanced database verification
     collection = db._collection
-    logger.info(f"Total documents in database: {collection.count()}")
+    doc_count = collection.count()
+    logger.info(f"Total documents in database: {doc_count}")
+    
+    # Sample a document to verify content
+    if doc_count > 0:
+        sample_results = db.similarity_search("andrew huberman", k=1)
+        if sample_results:
+            logger.info(f"Sample document content: {sample_results[0].page_content[:200]}...")
+        else:
+            logger.error("No documents found in similarity search")
+    else:
+        logger.error("Database appears to be empty")
+
+# Add a health check endpoint
+@app.get("/health")
+async def health_check():
+    try:
+        # Test the database
+        docs = db.similarity_search("test", k=1)
+        # Test the model with a simple query
+        test_response = await asyncio.to_thread(
+            lambda: llm("Say 'healthy'")
+        )
+        return {
+            "status": "healthy",
+            "database_docs": len(docs),
+            "model_test": test_response
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {"status": "unhealthy", "error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
