@@ -20,7 +20,7 @@ async def test_local_websocket():
                 "custom_session_id": None,
                 "message": {
                     "role": "user",
-                    "content": "Who is Andrew Huberman?",
+                    "content": "Who is andrew hoberman?",
                     "tool_call": None,
                     "tool_result": None
                 },

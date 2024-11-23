@@ -27,7 +27,7 @@ def main():
     query_text = args.query_text
 
     embedding_function = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
+        model_name="multi-qa-MiniLM-L6-v2",
         model_kwargs={'device': 'cpu'}
     )
     

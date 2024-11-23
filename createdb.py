@@ -3,7 +3,7 @@ from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 # from langchain.embeddings import OpenAIEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 # import openai 
 from dotenv import load_dotenv
@@ -21,10 +21,12 @@ CHROMA_PATH = "chroma"
 DATA_PATH = "docs/books"
 
 # Initialize embeddings - lightweight and M1 friendly
+
 embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2",
-    model_kwargs={'device': 'cpu'}  # Uses M1's GPU
+    model_name="sentence-transformers/all-MiniLM-L12-v2",
+    model_kwargs={'device': 'cpu'}  
 )
+
 
 def main():
     generate_data_store()
@@ -44,17 +46,19 @@ def load_documents():
 
 def split_text(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=100,
+        chunk_size=800,
+        chunk_overlap=200,
         length_function=len,
         add_start_index=True,
+        separators=["\n\n", "\n", " ", ""]
     )
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    document = chunks[10]
-    print(document.page_content)
-    print(document.metadata)
+    if len(chunks) > 10:
+        document = chunks[10]
+        print(document.page_content)
+        print(document.metadata)
 
     return chunks
 

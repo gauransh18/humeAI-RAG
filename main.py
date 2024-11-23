@@ -12,6 +12,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 import asyncio 
+import re
 
 load_dotenv()
 
@@ -32,7 +33,7 @@ app.add_middleware(
 
 # Initialize embeddings
 embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2",
+    model_name="sentence-transformers/all-MiniLM-L12-v2",
     model_kwargs={'device': 'cpu'}
 )
 
@@ -42,7 +43,7 @@ db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
 
 # Initialize the language model
 llm = HuggingFaceHub(
-    repo_id="google/flan-t5-large",
+    repo_id="google/flan-t5-base",
     huggingfacehub_api_token=os.environ['HUGGINGFACE_API_TOKEN'],
     model_kwargs={
         "temperature": 0.7,
@@ -80,6 +81,14 @@ Helpful Answer: """,
         )
     }
 )
+
+def preprocess_context(context: str) -> str:
+    """Clean and structure the context for better RAG performance."""
+    # Remove multiple newlines and spaces
+    context = re.sub(r'\s+', ' ', context)
+    # Remove special characters
+    context = re.sub(r'[^\w\s.,?!-]', '', context)
+    return context.strip()
 
 @app.get("/")
 async def read_root():

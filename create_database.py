@@ -17,11 +17,10 @@ def main():
         shutil.rmtree(CHROMA_PATH)
 
     # Initialize embeddings
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
+    embeddings =  HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L12-v2",
+        model_kwargs={'device': 'cpu'}  
     )
-
     # Load PDF documents
     pdf_loader = DirectoryLoader(DATA_PATH, glob="**/*.pdf", loader_cls=PyPDFLoader)
     pdf_documents = pdf_loader.load()

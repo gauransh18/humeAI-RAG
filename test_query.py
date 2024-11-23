@@ -10,7 +10,7 @@ CHROMA_PATH = "chroma"
 def test_query(query: str):
     # Initialize embeddings
     embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
+        model_name="sentence-transformers/all-MiniLM-L12-v2",
         model_kwargs={'device': 'cpu'}
     )
     
