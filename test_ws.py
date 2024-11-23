@@ -7,7 +7,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def test_local_websocket():
-    # uri = "wss://humeevi-rag.onrender.com/llm" 
     uri = "ws://localhost:8000/llm"
     logger.info(f"Connecting to {uri}")
     
@@ -15,8 +14,19 @@ async def test_local_websocket():
         logger.info("Connected")
         
         message = {
-            "type": "user_input",
-            "text": "Who is Andrew Huberman?"
+            "messages": [{
+                "type": "user_message",
+                "custom_session_id": None,
+                "message": {
+                    "role": "user",
+                    "content": "Who is Andrew Huberman?",
+                    "tool_call": None,
+                    "tool_result": None
+                },
+                "from_text": True
+            }],
+            "custom_session_id": None,
+            "chat_id": "test-session"
         }
         
         logger.info(f"Sending: {message}")
