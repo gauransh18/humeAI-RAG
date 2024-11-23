@@ -15,7 +15,7 @@ async def test_local_websocket():
         
         message = {
             "type": "user_input",
-            "text": "Hello"
+            "text": "Who is Andrew Huberman?"
         }
         
         logger.info(f"Sending: {message}")

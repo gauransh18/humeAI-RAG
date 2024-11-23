@@ -33,7 +33,7 @@ app.add_middleware(
 # Initialize embeddings
 embeddings = HuggingFaceEmbeddings(
     model_name="all-MiniLM-L6-v2",
-    model_kwargs={'device': 'mps'}
+    model_kwargs={'device': 'cpu'}
 )
 
 # Initialize Chroma

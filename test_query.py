@@ -11,7 +11,7 @@ def test_query(query: str):
     # Initialize embeddings
     embeddings = HuggingFaceEmbeddings(
         model_name="all-MiniLM-L6-v2",
-        model_kwargs={'device': 'mps'}
+        model_kwargs={'device': 'cpu'}
     )
     
     # Load the existing database
