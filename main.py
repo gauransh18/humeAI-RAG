@@ -102,26 +102,20 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Parse the message
                 message_data = json.loads(data)
                 
-                # Extract user text based on message format
-                if "messages" in message_data:  # Hume playground format
+                # Extract user text from the new message format
+                user_text = ""
+                if "messages" in message_data:
                     messages = message_data.get("messages", [])
-                    # Get the last user message
-                    user_messages = [
-                        msg for msg in messages 
-                        if msg.get("type") == "user_message" and 
-                           msg.get("from_text", False) is True
-                    ]
-                    if user_messages:
-                        latest_message = user_messages[-1]
-                        user_text = latest_message.get("message", {}).get("content", "")
-                        logger.info(f"Latest user question: {user_text}")
-                    else:
-                        continue
-                else:  # Test script format
-                    user_text = message_data.get("text", "")
+                    for msg in messages:
+                        if msg.get("type") == "user_message":
+                            user_text = msg.get("message", {}).get("content", "")
+                            break
                 
                 if not user_text:
+                    logger.warning("No valid user text found in message")
                     continue
+                
+                logger.info(f"Extracted user text: {user_text}")
                 
                 # Create a fresh chain for each question
                 qa_chain = ConversationalRetrievalChain.from_llm(

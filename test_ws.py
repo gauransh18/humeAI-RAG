@@ -15,8 +15,19 @@ async def test_local_websocket():
         logger.info("Connected")
         
         message = {
-            "type": "user_input",
-            "text": "Who is Andrew Huberman?"
+            "messages": [{
+                "type": "user_message",
+                "custom_session_id": None,
+                "message": {
+                    "role": "user",
+                    "content": "Who is Andrew Huberman?",
+                    "tool_call": None,
+                    "tool_result": None
+                },
+                "from_text": False
+            }],
+            "custom_session_id": None,
+            "chat_id": "test-chat-id"
         }
         
         logger.info(f"Sending: {message}")
